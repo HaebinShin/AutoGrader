@@ -20,7 +20,7 @@ function is_exist_txt(){
 function is_correct_extension(){
 	for i in "${extensionarr[@]}"
 	do
-		if [ $i = $1 ]; then
+		if [ $i = "$1" ]; then
 			return 0
 		fi
 	done
