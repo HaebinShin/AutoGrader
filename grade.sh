@@ -28,45 +28,76 @@ function is_correct_extension(){
 }
 
 function compare(){
-	if diff <(sed -e '$a\' $outputfile) <(sed -e '$a\' ./$answerfile) ; then
-		return 0
-	else
-		return 1
-	fi
+DIFF=$(diff <(sed -e '$a\' $outputfile) <(sed -e '$a\' ./$answerfile))
+if [ "$DIFF" != "" ]
+then
+  echo 1
+else
+  echo 0
+fi
 }
 
 function get_result(){
+  com=0
 	case $extension in
 		c )
-			gcc -o $compiledname.out $file || return 3
-			./$compiledname.out < ./$inputfile > $outputfile ;;
+			gcc -o $compiledname.out $file >& /dev/null || com=3
+      if [ $com -ne 3 ]
+      then
+        ./$compiledname.out < ./$inputfile > $outputfile
+      fi
+      ;;
 		cpp )
-			g++ -o $compiledname.out $file || return 3
-			./$compiledname.out < ./$inputfile > $outputfile ;;
+			g++ -o $compiledname.out $file >& /dev/null || com=3
+      if [ $com -ne 3 ]
+      then
+        ./$compiledname.out < ./$inputfile > $outputfile
+      fi
+      ;;
 		java )
-			javac $file || return 3
-			java $file_name < ./$inputfile > $outputfile
-			mv $file_name.class $compiledname.class ;;
+			javac $file >& /dev/null || com=3
+      if [ $com -ne 3 ]
+      then
+        java $file_name < ./$inputfile > $outputfile
+        mv $file_name.class $compiledname.class
+      fi
+      ;;
 		py )
-			python $file < ./$inputfile > $outputfile ;;
+      python $file < ./$inputfile >& /dev/null || com=3
+      if [ $com -ne 3 ]
+      then
+        python $file < ./$inputfile > $outputfile
+      fi
+      ;;
 		* )
-			return 2 ;;
+			echo 2 ;;
 	esac
-	test -e $compiledname.* && rm $compiledname.*
-	compare
-	test -e $outputfile && rm $outputfile
-	return $?
+  if [ $com -ne 3 ]
+  then
+    test -e $compiledname.* && rm $compiledname.*
+    com=`compare`
+    test -e $outputfile && rm $outputfile
+  fi
+  echo $com
 }
 
 
 declare -r inputfile="input.txt"
 declare -r answerfile="answer.txt"
 declare -a extensionarr=("c" "cpp" "java" "py")
-declare -a resultarr=(
-	"Correct" 
-	"Wrong" 
-	"Can not grade this file extension" 
-	"Compile Error" )
+if [ "$(uname)" == "Darwin" ]; then
+  declare -a resultarr=(
+    "\x1B[92mCorrect\x1B[39m" 
+    "\x1B[91mWrong\x1B[39m" 
+    "Can not grade this file extension" 
+    "\x1B[94mCompile Error\x1B[39m" )
+else
+  declare -a resultarr=(
+    "\e[92mCorrect\e[39m" 
+    "\e[91mWrong\e[39m" 
+    "Can not grade this file extension" 
+    "\e[94mCompile Error\e[39m" )
+fi
 
 if ! is_exist_txt; then
 	exit 0
@@ -83,6 +114,6 @@ do
 	compiledname=compiled_$timestamp
 	outputfile=output_$timestamp.tmp
 
-	get_result
-	echo -e "$file\t${resultarr[$?]}"	
+	res=`get_result`
+  echo -e "$file\t${resultarr[$res]}"	
 done

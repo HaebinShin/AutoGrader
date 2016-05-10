@@ -1,0 +1,10 @@
+1c1
+< Hello World!
+---
+> asdf
+a.c	Correct
+1c1
+< Hello World!
+---
+> asdf
+a.py	Correct
