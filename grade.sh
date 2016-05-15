@@ -4,8 +4,8 @@
 # usage : ./grade.sh
 
 function is_exist_txt(){
-	if test -e ./$inputfile; then
-		if test -e ./$answerfile; then
+	if test -e ./"$inputfile"; then
+		if test -e ./"$answerfile"; then
 			return 0
 		else
 			echo "Error : Not exist answer.txt in this directory"
@@ -20,7 +20,7 @@ function is_exist_txt(){
 function is_correct_extension(){
 	for i in "${extensionarr[@]}"
 	do
-		if [ $i = "$1" ]; then
+		if [ "$i" = "$1" ]; then
 			return 0
 		fi
 	done
@@ -28,7 +28,7 @@ function is_correct_extension(){
 }
 
 function compare(){
-DIFF=$(diff <(sed -e '$a\' $outputfile) <(sed -e '$a\' ./$answerfile))
+DIFF="$(diff <(sed -e '$a\' $outputfile) <(sed -e '$a\' ./$answerfile))"
 if [ "$DIFF" != "" ]
 then
   echo 1
@@ -39,46 +39,46 @@ fi
 
 function get_result(){
   com=0
-	case $extension in
+	case "$extension" in
 		c )
-			gcc -o $compiledname.out $file >& /dev/null || com=3
-      if [ $com -ne 3 ]
+			gcc -o "$compiledname".out "$file" >& /dev/null || com=3
+      if [ "$com" -ne 3 ]
       then
-        ./$compiledname.out < ./$inputfile > $outputfile
+        ./"$compiledname".out < ./"$inputfile" > "$outputfile"
       fi
       ;;
 		cpp )
-			g++ -o $compiledname.out $file >& /dev/null || com=3
-      if [ $com -ne 3 ]
+			g++ -o "$compiledname".out "$file" >& /dev/null || com=3
+      if [ "$com" -ne 3 ]
       then
-        ./$compiledname.out < ./$inputfile > $outputfile
+        ./"$compiledname".out < ./"$inputfile" > "$outputfile"
       fi
       ;;
 		java )
-			javac $file >& /dev/null || com=3
-      if [ $com -ne 3 ]
+			javac "$file" >& /dev/null || com=3
+      if [ "$com" -ne 3 ]
       then
-        java $file_name < ./$inputfile > $outputfile
-        mv $file_name.class $compiledname.class
+        java "$file_name" < ./"$inputfile" > "$outputfile"
+        mv "$file_name".class "$compiledname".class
       fi
       ;;
 		py )
-      python $file < ./$inputfile >& /dev/null || com=3
-      if [ $com -ne 3 ]
+      python "$file" < ./"$inputfile" >& /dev/null || com=3
+      if [ "$com" -ne 3 ]
       then
-        python $file < ./$inputfile > $outputfile
+        python "$file" < ./"$inputfile" > "$outputfile"
       fi
       ;;
 		* )
 			echo 2 ;;
 	esac
-  if [ $com -ne 3 ]
+  if [ "$com" -ne 3 ]
   then
-    test -e $compiledname.* && rm $compiledname.*
+    test -e "$compiledname".* && rm "$compiledname".*
     com=`compare`
-    test -e $outputfile && rm $outputfile
+    test -e "$outputfile" && rm "$outputfile"
   fi
-  echo $com
+  echo "$com"
 }
 
 
@@ -106,13 +106,13 @@ fi
 for file in *
 do
 	IFS='.' read file_name extension <<< "$file"
-	if ! is_correct_extension $extension; then
+	if ! is_correct_extension "$extension"; then
 		continue
 	fi
 
 	timestamp=`date "+%Y%m%d_%H%M%S"`
-	compiledname=compiled_$timestamp
-	outputfile=output_$timestamp.tmp
+	compiledname=compiled_"$timestamp"
+	outputfile=output_"$timestamp".tmp
 
 	res=`get_result`
   echo -e "$file\t${resultarr[$res]}"	
